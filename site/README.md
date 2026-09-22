@@ -17,4 +17,4 @@ Figure 2 covers 53 runs / 11 priced cohorts, with Cursor excluded and Codex valu
 
 Charts were prepared in the local scratch chart workspace on 22 September 2026 using the release-audit data. Raw run artifacts and plotting scripts are not published in `site/`. The dataset and traces are linked at https://huggingface.co/datasets/mxls/MineTrials .
 
-The page retains its working-draft label pending final cohort and pricing review. The compact masthead uses a text wordmark; the unused local logo screenshot is not part of this update. Minecraft textures and provider marks remain the property of their respective owners; the repository’s original-code license does not license those assets.
+The article header pairs the September 2026 date with the MineTrials title; the logo appears in the masthead. The logo uses multiply blending to soften its background against the white page. The Pareto legend shows provider names without pricing-basis subtitles; the cost discussion retains that context. Minecraft textures and provider marks remain the property of their respective owners; the repository’s original-code license does not license those assets.

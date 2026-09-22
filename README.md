@@ -26,9 +26,10 @@ dataset contains the non-video artifacts.
 
 [![MineTrials architecture: an AI agent calls MCP tools for code execution and editable reflexes; a Fabric bridge drives Minecraft through Baritone and game interactions, returning structured state, events, and images.](site/assets/harness.png)](site/assets/harness.svg)
 
-The agent supplies the reasoning loop; MineTrials supplies the game interface.
-Event-driven reflexes react between model calls. See the
-[runtime reference](RUNTIME.md) for the tools and bridge API.
+Agents inspect the world, take screenshots, and run short Python actions through
+MCP. The game interface handles movement, mining, and interactions, while
+editable reflexes react between model calls. A browser monitor lets you follow
+the action. See the [runtime reference](RUNTIME.md) for the tools and bridge API.
 
 ## Run the benchmark
 
