@@ -8,7 +8,7 @@ source /opt/bench/common.sh
 
 wait_for_mcp || exit 1
 
-if [[ -z "${OPENCODE_API_KEY:-}" ]]; then
+if [[ -z "${OPENCODE_API_KEY:-}" && -z "${BENCH_OPENAI_BASE_URL:-}" ]]; then
     log "FATAL: OPENCODE_API_KEY is empty — refusing to start the agent"
     exit 1
 fi
@@ -36,6 +36,10 @@ cat > "$WORKSPACE/opencode.json" <<JSON
   "permission": { "*": "allow" }
 }
 JSON
+
+if [[ -n "${BENCH_OPENAI_BASE_URL:-}" ]]; then
+    node /opt/bench/custom-provider.mjs "$WORKSPACE/opencode.json" "$ART/provider.json" || exit 1
+fi
 
 opencode --version > "$ART/opencode-version.txt" 2>&1 || true
 log "model=$BENCH_MODEL budget=${RUN_SECONDS}s mcp=$MCP_URL opencode=$(cat "$ART/opencode-version.txt")"

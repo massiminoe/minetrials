@@ -250,6 +250,7 @@ def summarize_claude_code(harness_dir: Path) -> dict:
 # opencode
 # --------------------------------------------------------------------------- #
 def summarize_opencode(harness_dir: Path, model: str | None) -> dict:
+    selfhosted = bool(model and model.startswith("selfhosted/"))
     paths = sorted(harness_dir.glob("opencode-*.jsonl"), key=invocation_order)
     tokens = empty_tokens()
     per_invocation, terminal = [], Counter()
@@ -300,7 +301,7 @@ def summarize_opencode(harness_dir: Path, model: str | None) -> dict:
         per_invocation.append({
             "file": path.name,
             "steps": steps,
-            "cost_usd": round(inv_cost, 6),
+            "cost_usd": None if selfhosted else round(inv_cost, 6),
             "tokens": inv_tokens,
             # step_finish tokens are read as per-step and summed. Keeping the
             # final step alongside the sum makes that assumption falsifiable from
@@ -330,7 +331,7 @@ def summarize_opencode(harness_dir: Path, model: str | None) -> dict:
             "output": tokens["output"],
             "cache_write": tokens["cache_write"],
             "cache_read": tokens["cache_read"],
-            "cost_usd": round(cost, 6),
+            "cost_usd": None if selfhosted else round(cost, 6),
         }
     return {
         "invocations": len(paths),
@@ -338,10 +339,10 @@ def summarize_opencode(harness_dir: Path, model: str | None) -> dict:
         "turns": steps_total,
         "tokens": tokens,
         "total_tokens": sum(tokens[k] for k in ("input", "output", "cache_write", "cache_read")),
-        "cost_usd": round(cost, 6),
+        "cost_usd": None if selfhosted else round(cost, 6),
         # What opencode Zen metered — the same figure the Go plan's dollar caps
         # are charged against, so this is an invoice, not an estimate.
-        "cost_basis": "gateway_metered",
+        "cost_basis": "unavailable" if selfhosted else "gateway_metered",
         "by_model": by_model,
         "terminal_reasons": dict(terminal),
         "health": health,

@@ -26,7 +26,16 @@ git checkout --quiet __GIT_REF__
 HARNESS="__HARNESS__"
 # Disable tracing before handling ANY credentials: boot logs are uploaded.
 set +x
-if [[ "$HARNESS" == "codex" ]]; then
+if [[ "__ANDY_PILOT__" == "1" ]]; then
+    export BENCH_OPENAI_BASE_URL=http://host.docker.internal:1234/v1
+    export BENCH_HARNESS_VERSION=1.18.32
+    mkdir -p "state/bench/__RUN_ID__/inference"
+    if ! bash bench/aws/setup-andy.sh "state/bench/__RUN_ID__/inference"; then
+        cp /var/log/bench-userdata.log "state/bench/__RUN_ID__/"
+        aws s3 cp --only-show-errors --recursive "state/bench/__RUN_ID__" "s3://__BUCKET__/runs/__RUN_ID__/" --region __REGION__
+        shutdown -h now "Andy setup failed"; exit 1
+    fi
+elif [[ "$HARNESS" == "codex" ]]; then
     export CODEX_AUTH_DIR=/opt/codex-auth
     install -d -m 700 "$CODEX_AUTH_DIR"
     if ! aws ssm get-parameter --region __REGION__ --name __CODEX_AUTH_PARAMETER__ \

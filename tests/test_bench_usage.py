@@ -62,6 +62,17 @@ def test_unknown_kind_is_refused(tmp_path: Path) -> None:
 # --------------------------------------------------------------------------- #
 # opencode
 # --------------------------------------------------------------------------- #
+def test_selfhosted_opencode_does_not_report_free_inference(tmp_path: Path) -> None:
+    harness_dir = write_run(tmp_path, "opencode", "selfhosted/andy-4.2", {
+        "opencode-1.jsonl": jsonl(step(0, 100, 20, 0)),
+    })
+    result = bench_usage.summarize(harness_dir)
+    assert result["tokens"]["input"] == 100
+    assert result["cost_usd"] is None
+    assert result["cost_basis"] == "unavailable"
+    assert result["by_model"]["selfhosted/andy-4.2"]["cost_usd"] is None
+    assert result["per_invocation"][0]["cost_usd"] is None
+
 def step(cost: float, inp: int, out: int, read: int, write: int = 0, reason: str = "tool-calls") -> dict:
     return {
         "type": "step_finish",

@@ -55,7 +55,11 @@ fi
 # rather than discovering the gap after world-gen has burned ten minutes.
 case "$HARNESS" in
     claude-code) AUTH_VARS="CLAUDE_CODE_OAUTH_TOKEN|ANTHROPIC_API_KEY" ;;
-    opencode)    AUTH_VARS="OPENCODE_API_KEY" ;;
+    opencode)
+        AUTH_VARS="OPENCODE_API_KEY"
+        # An explicitly configured private model server does not need Zen auth.
+        [[ -n "${BENCH_OPENAI_BASE_URL:-}" ]] && AUTH_VARS=""
+        ;;
     cursor)      AUTH_VARS="CURSOR_API_KEY" ;;
     *)           AUTH_VARS="" ;;
 esac

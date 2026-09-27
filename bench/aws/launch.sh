@@ -5,6 +5,7 @@
 #                       [--run-id <id>] [--seed <s>] [--type c7i.2xlarge] [--spot]
 #                       [--git-ref <sha|branch>] [--record-fps 15] [--codex-worker N] [--no-wait]
 #                       [--reasoning-effort low]
+#                       [--andy-pilot] (self-hosted GPU smoke run, at most 600s)
 #
 # --harness picks the driver image (claude-code | opencode | cursor | codex); the VM
 # pulls that harness's credential from SSM (see bench/aws/setup.sh).
@@ -26,6 +27,7 @@ SPOT=0
 GIT_REF="$(git rev-parse HEAD)"
 RECORD_FPS=15
 WAIT=1
+ANDY_PILOT=0
 CODEX_WORKER=""
 REASONING_EFFORT="${BENCH_REASONING_EFFORT:-}"
 while [[ $# -gt 0 ]]; do
@@ -42,11 +44,22 @@ while [[ $# -gt 0 ]]; do
         --codex-worker) CODEX_WORKER="$2"; shift 2 ;;
         --spot)    SPOT=1; shift ;;
         --no-wait) WAIT=0; shift ;;
+        --andy-pilot) ANDY_PILOT=1; shift ;;
         *) echo "unknown arg: $1" >&2; exit 2 ;;
     esac
 done
 
 source bench/validate-config.sh
+
+if [[ $ANDY_PILOT -eq 1 ]]; then
+    if [[ "$HARNESS" != "opencode" || "$MODEL" != "selfhosted/andy-4.2" || "$ITYPE" != "g6e.2xlarge" || $SPOT -ne 0 || ! "$SECONDS_BUDGET" =~ ^[0-9]+$ || "$SECONDS_BUDGET" -gt 600 ]]; then
+        echo "--andy-pilot requires --harness opencode --model selfhosted/andy-4.2 --type g6e.2xlarge --seconds 600 (or less), on-demand" >&2
+        exit 2
+    fi
+    GPU_QUOTA=$(aws service-quotas get-service-quota --region "$REGION" --service-code ec2 \
+        --quota-code L-DB2E81BA --query Quota.Value --output text)
+    python3 -c 'import sys; sys.exit(0 if float(sys.argv[1]) >= 8 else "AWS on-demand G/VT quota must be at least 8 vCPUs")' "$GPU_QUOTA"
+fi
 
 if [[ "$HARNESS" == "codex" ]]; then
     if [[ -n "$CODEX_WORKER" && ! "$CODEX_WORKER" =~ ^[1-9][0-9]*$ ]]; then
@@ -89,6 +102,14 @@ MAX_MINUTES=$(( SECONDS_BUDGET / 60 + 45 ))
 AMI=$(aws ssm get-parameter --region "$REGION" \
     --name /aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id \
     --query Parameter.Value --output text)
+DISK_GB=60
+if [[ $ANDY_PILOT -eq 1 ]]; then
+    AMI=$(aws ssm get-parameter --region "$REGION" \
+        --name /aws/service/deeplearning/ami/x86_64/base-oss-nvidia-driver-gpu-ubuntu-24.04/latest/ami-id \
+        --query Parameter.Value --output text)
+    DISK_GB=100
+    MAX_MINUTES=90
+fi
 SG_ID=$(aws ec2 describe-security-groups --region "$REGION" \
     --filters Name=group-name,Values=mineclaude-bench \
     --query 'SecurityGroups[0].GroupId' --output text)
@@ -105,6 +126,7 @@ sed -e "s|__REGION__|$REGION|g" \
     -e "s|__GIT_REF__|$GIT_REF|g" \
     -e "s|__RECORD_FPS__|$RECORD_FPS|g" \
     -e "s|__MAX_MINUTES__|$MAX_MINUTES|g" \
+    -e "s|__ANDY_PILOT__|$ANDY_PILOT|g" \
     -e "s|__CODEX_AUTH_PARAMETER__|$CODEX_AUTH_PARAMETER|g" \
     -e "s|__CODEX_WORKER_ARGS__|$CODEX_WORKER_ARGS|g" \
     bench/aws/user-data.sh.tpl > "$UD"
@@ -121,7 +143,7 @@ IID=$(aws ec2 run-instances --region "$REGION" \
     --security-group-ids "$SG_ID" \
     --iam-instance-profile Name=mineclaude-bench-ec2 \
     --instance-initiated-shutdown-behavior terminate \
-    --block-device-mappings 'DeviceName=/dev/sda1,Ebs={VolumeSize=60,VolumeType=gp3,DeleteOnTermination=true}' \
+    --block-device-mappings "DeviceName=/dev/sda1,Ebs={VolumeSize=$DISK_GB,VolumeType=gp3,DeleteOnTermination=true}" \
     --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=mineclaude-bench-${RUN_ID}},{Key=bench-run,Value=${RUN_ID}}]" \
     --user-data "file://$UD" \
     ${MARKET_ARGS[@]+"${MARKET_ARGS[@]}"} \

@@ -88,8 +88,12 @@ services:
       # opencode: Zen / Go subscription key (the provider is part of the model
       # id, e.g. opencode-go/qwen3.8-flash).
       OPENCODE_API_KEY: "${OPENCODE_API_KEY:-}"
+      BENCH_OPENAI_BASE_URL: "${BENCH_OPENAI_BASE_URL:-}"
+      BENCH_OPENAI_API_KEY: "${BENCH_OPENAI_API_KEY:-}"
       # cursor: dashboard -> API Keys; usage draws on the account's plan.
       CURSOR_API_KEY: "${CURSOR_API_KEY:-}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./skills:/skills:ro
       - ./bench/scoring:/scoring:ro

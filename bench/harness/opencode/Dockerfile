@@ -17,6 +17,7 @@ RUN npm install -g "opencode-ai@${BENCH_HARNESS_VERSION}"
 COPY prompt.md /opt/bench/prompt.md
 COPY common.sh /opt/bench/common.sh
 COPY opencode/entrypoint.sh /opt/bench/entrypoint.sh
+COPY opencode/custom-provider.mjs /opt/bench/custom-provider.mjs
 RUN chmod +x /opt/bench/entrypoint.sh
 
 # uid 1000 lines up with the default admin uid on the bench VMs, so

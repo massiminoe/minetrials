@@ -21,7 +21,7 @@ SOURCE_PATHS = (
     "skills/minetrials", "bench/harness", "bench/run.sh", "bench/metadata.py",
     "bench/validate-config.sh", "bench/compose.bench.yml", "bench/compose.codex.yml",
     "docker-compose.yml", "docker-compose.arm64.yml", "pyproject.toml", "requirements-dev.lock",
-    "bench/score.py", "bench/usage.py", "bench/minetrials.Dockerfile",
+    "bench/score.py", "bench/usage.py", "bench/minetrials.Dockerfile", "bench/aws/setup-andy.sh",
     "mc-client/options.txt", "mc-client/baritone-settings.txt", "mc-server/ops.json",
 )
 
