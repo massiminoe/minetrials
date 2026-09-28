@@ -54,8 +54,8 @@ done
 source bench/validate-config.sh
 
 if [[ $ANDY_PILOT -eq 1 ]]; then
-    if [[ "$HARNESS" != "opencode" || "$MODEL" != "selfhosted/andy-4.2" || "$ITYPE" != "g6e.2xlarge" || $SPOT -ne 0 || ! "$SECONDS_BUDGET" =~ ^[0-9]+$ || "$SECONDS_BUDGET" -gt 600 ]]; then
-        echo "--andy-pilot requires --harness opencode --model selfhosted/andy-4.2 --type g6e.2xlarge --seconds 600 (or less), on-demand" >&2
+    if [[ "$HARNESS" != "opencode" || "$MODEL" != "selfhosted/andy-4.2" || ( "$ITYPE" != "g6e.2xlarge" && "$ITYPE" != "g6.2xlarge" ) || $SPOT -ne 0 || ! "$SECONDS_BUDGET" =~ ^[0-9]+$ || "$SECONDS_BUDGET" -gt 600 ]]; then
+        echo "--andy-pilot requires --harness opencode --model selfhosted/andy-4.2 --type g6e.2xlarge or g6.2xlarge --seconds 600 (or less), on-demand" >&2
         exit 2
     fi
     GPU_QUOTA=$(aws service-quotas get-service-quota --region "$REGION" --service-code ec2 \
