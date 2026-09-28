@@ -10,6 +10,17 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 
 
+@pytest.mark.parametrize("seconds", ["3600", "0", "-1", "not-a-number"])
+def test_andy_pilot_rejects_invalid_budgets_before_aws(seconds):
+    result = subprocess.run([
+        "bash", str(ROOT / "bench/aws/launch.sh"), "--andy-pilot",
+        "--harness", "opencode", "--model", "selfhosted/andy-4.2",
+        "--type", "g6.2xlarge", "--seconds", seconds,
+    ], capture_output=True, text=True)
+    assert result.returncode == 2
+    assert "--andy-pilot requires" in result.stderr
+
+
 @pytest.mark.skipif(not shutil.which("node"), reason="Node required for harness config")
 def test_custom_provider_preserves_mcp_and_keeps_credentials_out_of_artifacts(tmp_path):
     config = tmp_path / "opencode.json"

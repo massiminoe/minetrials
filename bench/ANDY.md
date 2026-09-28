@@ -26,8 +26,18 @@ was zero; an increase to eight was requested on 2026-09-27. Check AWS Service
 Quotas before retrying. Do not launch real trials as a fallback.
 
 Quota request ID: `f5cfd56e4181428cbde3ec97d751e6f2CLVmNvc1`.
-AWS support case: `179049897900084`. At preparation time the request was
-`CASE_OPENED`; no GPU instance had been launched and gameplay was unverified.
+AWS support case: `179049897900084`. On 2026-09-28 the quota was approved at
+eight vCPUs. All four supported L40S availability zones rejected launches for
+insufficient capacity, so the compatibility pilot uses `--type g6.2xlarge`
+(L4, 24 GB class VRAM, 32 GiB host RAM, $0.9776/hour on-demand). This is a
+compatibility fallback, not the final trial hardware decision. Use `--subnet`
+to select a specific availability zone when needed.
+
+The first VM (`andy-4.2-pilot-20260928`) failed before gameplay because cloud-init
+did not supply HOME. Model setup now runs through `sudo -H`; the failed VM was
+terminated and its setup logs are retained in S3. The retry is
+`andy-4.2-pilot-20260928b`. Gameplay remains unverified until its transcripts
+show successful actions.
 
 Success requires evidence in the transcript/runtime logs that Andy made a valid
 MCP call and successfully acted in the game (for example moving or collecting
