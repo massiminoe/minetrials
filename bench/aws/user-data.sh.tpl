@@ -33,6 +33,8 @@ set +x
 if [[ "__ANDY_PILOT__" == "1" ]]; then
     export BENCH_OPENAI_BASE_URL=http://host.docker.internal:1234/v1
     export BENCH_HARNESS_VERSION=1.18.32
+    export BENCH_MONITOR_PORT=5557
+    apt-get install -yq aria2
     mkdir -p "state/bench/__RUN_ID__/inference"
     if ! sudo -H bash bench/aws/setup-andy.sh "state/bench/__RUN_ID__/inference"; then
         cp /var/log/bench-userdata.log "state/bench/__RUN_ID__/"

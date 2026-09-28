@@ -55,7 +55,7 @@ services:
       # non-Claude harnesses lower it via BENCH_EXECUTE_WAIT_S.
       MINETRIALS_EXECUTE_WAIT_S: "${BENCH_EXECUTE_WAIT_S:-50}"
     ports:
-      - "5555:5555" # monitor (watch a live run from the host)
+      - "${BENCH_MONITOR_PORT:-5555}:5555" # monitor (GPU images may occupy 5555)
       - "5556:5556" # MCP (debug against the same server the harness drives)
     volumes:
       - "${BENCH_RUN_DIR:-./state/bench/dev}/sessions:/app/state/sessions"

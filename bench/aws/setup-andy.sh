@@ -10,9 +10,16 @@ MODEL_DIR="$HOME/.lmstudio/models/Mindcraft-CE/Andy-4.2-GGUF"
 mkdir -p "$MODEL_DIR"
 for file in andy-4.2.q8_0.gguf mmproj-BF16.gguf; do
     [[ -f "$MODEL_DIR/$file.complete" ]] && continue
-    curl --fail --location --retry 3 \
-        "https://huggingface.co/Mindcraft-CE/Andy-4.2-GGUF/resolve/$MODEL_REV/$file" \
-        --output "$MODEL_DIR/$file"
+    if command -v aria2c >/dev/null 2>&1; then
+        aria2c --max-connection-per-server=8 --split=8 --min-split-size=16M \
+            --summary-interval=30 --console-log-level=warn --download-result=hide \
+            --dir="$MODEL_DIR" --out="$file" \
+            "https://huggingface.co/Mindcraft-CE/Andy-4.2-GGUF/resolve/$MODEL_REV/$file"
+    else
+        curl --fail --location --retry 3 \
+            "https://huggingface.co/Mindcraft-CE/Andy-4.2-GGUF/resolve/$MODEL_REV/$file" \
+            --output "$MODEL_DIR/$file"
+    fi
     touch "$MODEL_DIR/$file.complete"
 done
 (cd "$MODEL_DIR" && sha256sum *.gguf) > "$ART/model-sha256.txt"
