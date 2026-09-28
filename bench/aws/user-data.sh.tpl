@@ -12,9 +12,13 @@ shutdown -h +__MAX_MINUTES__ "bench deadman" || true
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -q
 apt-get install -yq git curl unzip python3
-curl -fsSL https://get.docker.com | sh
-curl -fsSL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o /tmp/awscli.zip
-unzip -q /tmp/awscli.zip -d /tmp && /tmp/aws/install
+if ! docker compose version >/dev/null 2>&1; then
+    curl -fsSL https://get.docker.com | sh
+fi
+if ! command -v aws >/dev/null 2>&1; then
+    curl -fsSL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o /tmp/awscli.zip
+    unzip -q /tmp/awscli.zip -d /tmp && /tmp/aws/install
+fi
 
 git clone https://github.com/massiminoe/minetrials.git /opt/minetrials
 cd /opt/minetrials
@@ -30,7 +34,7 @@ if [[ "__ANDY_PILOT__" == "1" ]]; then
     export BENCH_OPENAI_BASE_URL=http://host.docker.internal:1234/v1
     export BENCH_HARNESS_VERSION=1.18.32
     mkdir -p "state/bench/__RUN_ID__/inference"
-    if ! bash bench/aws/setup-andy.sh "state/bench/__RUN_ID__/inference"; then
+    if ! sudo -H bash bench/aws/setup-andy.sh "state/bench/__RUN_ID__/inference"; then
         cp /var/log/bench-userdata.log "state/bench/__RUN_ID__/"
         aws s3 cp --only-show-errors --recursive "state/bench/__RUN_ID__" "s3://__BUCKET__/runs/__RUN_ID__/" --region __REGION__
         shutdown -h now "Andy setup failed"; exit 1
