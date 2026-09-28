@@ -9,19 +9,24 @@ MODEL_REV=d3efcb8137c88cd3c23466ddabf985ea59b52fdf
 MODEL_DIR="$HOME/.lmstudio/models/Mindcraft-CE/Andy-4.2-GGUF"
 mkdir -p "$MODEL_DIR"
 for file in andy-4.2.q8_0.gguf mmproj-BF16.gguf; do
+    [[ -f "$MODEL_DIR/$file.complete" ]] && continue
     curl --fail --location --retry 3 \
         "https://huggingface.co/Mindcraft-CE/Andy-4.2-GGUF/resolve/$MODEL_REV/$file" \
         --output "$MODEL_DIR/$file"
+    touch "$MODEL_DIR/$file.complete"
 done
 (cd "$MODEL_DIR" && sha256sum *.gguf) > "$ART/model-sha256.txt"
-curl --fail --location https://lmstudio.ai/install.sh -o /tmp/lmstudio-install.sh
-bash /tmp/lmstudio-install.sh
+if [[ ! -x "$HOME/.lmstudio/bin/lms" ]]; then
+    curl --fail --location https://lmstudio.ai/install.sh -o /tmp/lmstudio-install.sh
+    bash /tmp/lmstudio-install.sh
+fi
 export PATH="$HOME/.lmstudio/bin:$PATH"
 lms --version > "$ART/lms-version.txt"
 lms daemon up
+lms runtime get llama.cpp:cuda -y
 lms runtime ls > "$ART/runtime-versions.txt"
-lms load Mindcraft-CE/Andy-4.2-GGUF/andy-4.2.q8_0.gguf \
-    --identifier andy-4.2 --context-length 32768 --gpu max
+lms load andy-4.2 --yes \
+    --identifier andy-4.2 --context-length 32768 --gpu max </dev/null
 # Listen only on Docker's host bridge; no public inference port is opened.
 DOCKER_IP=$(ip -4 addr show docker0 | awk '/inet / {split($2,a,"/"); print a[1]}')
 test -n "$DOCKER_IP"
