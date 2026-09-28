@@ -36,8 +36,9 @@ to select a specific availability zone when needed.
 The first VM (`andy-4.2-pilot-20260928`) failed before gameplay because cloud-init
 did not supply HOME. Model setup now runs through `sudo -H`; the failed VM was
 terminated and its setup logs are retained in S3. The retry is
-`andy-4.2-pilot-20260928b`. Gameplay remains unverified until its transcripts
-show successful actions.
+`andy-4.2-pilot-20260928b` loaded Andy successfully but failed to publish the
+monitor: NVIDIA's `nv-hostengine` occupies host port 5555 on the GPU image.
+The pilot now publishes the monitor on 5557. Parallel downloads shorten setup.
 
 Success requires evidence in the transcript/runtime logs that Andy made a valid
 MCP call and successfully acted in the game (for example moving or collecting
@@ -51,3 +52,31 @@ sessions, video and score. Self-hosted token counts remain available; token
 cost is `null` rather than a fictitious zero. Account for instance rental
 separately. LM Studio/runtime installation is not yet version-pinned; inspect
 the recorded versions and pin the working stack before real trials.
+
+## Completed pilot: 2026-09-28
+
+Run `andy-4.2-pilot-20260928c`, source `e4092be`, completed the normal 600-second
+pilot on one on-demand `g6.2xlarge`. Artifacts are under the standard S3
+`runs/andy-4.2-pilot-20260928c/` prefix and locally in
+`state/bench/andy-4.2-pilot-20260928c-remote/` (ignored, not committed).
+
+- OpenCode 1.18.32; LM Studio CLI commit 69d945a; CUDA runtime 2.41.0.
+- Q8_0 model and vision projector loaded, 32,768 context. Vision use itself
+  remains unvalidated: Andy never called the screenshot MCP tool directly.
+- 50 model steps; 48 execute calls: five completed immediately, 42 failed,
+  and one returned running after the 40-second inline wait.
+- The final background action found stone and successfully broke four blocks.
+  Runtime receipts show breaks at +572.30s, +579.61s, +595.25s and +614.09s
+  relative to runner t0. Three were inside the ten-minute budget; one was in
+  shutdown grace.
+- Zero advancements. No successful item collection was confirmed. Breaking
+  stone without first obtaining a pickaxe does not imply obtaining cobblestone.
+- Andy read SKILL.md once, but repeatedly invented movement primitives instead
+  of reading primitives.md: 33 errors named `move_to`. It also confused separate
+  MCP tools with Python functions and initially tried blocked imports.
+
+This demonstrates actual game mutation via Andy + OpenCode + MCP, but weak
+unaided adaptation to the primitive API. No prompt intervention was applied,
+and no guided follow-up or real trials ran. Preserve these artifacts as a
+compatibility pilot, not a one-hour score. Before four real trials, separately
+test a concise API reminder and evaluate whether it prevents the error loop.
