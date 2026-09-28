@@ -28,6 +28,7 @@ GIT_REF="$(git rev-parse HEAD)"
 RECORD_FPS=15
 WAIT=1
 ANDY_PILOT=0
+SUBNET_ID=""
 CODEX_WORKER=""
 REASONING_EFFORT="${BENCH_REASONING_EFFORT:-}"
 while [[ $# -gt 0 ]]; do
@@ -45,6 +46,7 @@ while [[ $# -gt 0 ]]; do
         --spot)    SPOT=1; shift ;;
         --no-wait) WAIT=0; shift ;;
         --andy-pilot) ANDY_PILOT=1; shift ;;
+        --subnet) SUBNET_ID="$2"; shift 2 ;;
         *) echo "unknown arg: $1" >&2; exit 2 ;;
     esac
 done
@@ -132,6 +134,8 @@ sed -e "s|__REGION__|$REGION|g" \
     bench/aws/user-data.sh.tpl > "$UD"
 
 MARKET_ARGS=()
+NETWORK_ARGS=()
+[[ -n "$SUBNET_ID" ]] && NETWORK_ARGS=(--subnet-id "$SUBNET_ID")
 if [[ $SPOT -eq 1 ]]; then
     MARKET_ARGS=(--instance-market-options 'MarketType=spot,SpotOptions={SpotInstanceType=one-time,InstanceInterruptionBehavior=terminate}')
 fi
@@ -146,6 +150,7 @@ IID=$(aws ec2 run-instances --region "$REGION" \
     --block-device-mappings "DeviceName=/dev/sda1,Ebs={VolumeSize=$DISK_GB,VolumeType=gp3,DeleteOnTermination=true}" \
     --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=mineclaude-bench-${RUN_ID}},{Key=bench-run,Value=${RUN_ID}}]" \
     --user-data "file://$UD" \
+    ${NETWORK_ARGS[@]+"${NETWORK_ARGS[@]}"} \
     ${MARKET_ARGS[@]+"${MARKET_ARGS[@]}"} \
     --query 'Instances[0].InstanceId' --output text)
 rm -f "$UD"
