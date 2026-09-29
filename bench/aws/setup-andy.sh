@@ -2,6 +2,8 @@
 # Run on the ephemeral GPU VM, before the benchmark clock starts.
 set -euo pipefail
 ART=$(realpath "$1")
+PILOT=true
+[[ "${2:-pilot}" == "trial" ]] && PILOT=false
 mkdir -p "$ART"
 exec > >(tee "$ART/setup.log") 2>&1
 nvidia-smi > "$ART/nvidia-smi.txt"
@@ -41,5 +43,5 @@ lms server start --port 1234 --bind "$DOCKER_IP"
 curl --fail --retry 3 "http://$DOCKER_IP:1234/v1/models" > "$ART/models.json"
 lms ps > "$ART/loaded-models.txt"
 cat > "$ART/settings.json" <<JSON
-{"model":"Mindcraft-CE/Andy-4.2-GGUF","revision":"$MODEL_REV","quantization":"Q8_0","context":32768,"serving":"LM Studio llmster","pilot":true}
+{"model":"Mindcraft-CE/Andy-4.2-GGUF","revision":"$MODEL_REV","quantization":"Q8_0","context":32768,"serving":"LM Studio llmster","pilot":$PILOT}
 JSON

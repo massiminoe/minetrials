@@ -80,3 +80,18 @@ unaided adaptation to the primitive API. No prompt intervention was applied,
 and no guided follow-up or real trials ran. Preserve these artifacts as a
 compatibility pilot, not a one-hour score. Before four real trials, separately
 test a concise API reminder and evaluate whether it prevents the error loop.
+
+## Single full trial
+
+The user authorized exactly one 3,600-second run on 2026-09-29, using the same
+model, OpenCode version, standard prompt and L4 hardware as the completed pilot.
+`--andy-run` enables this explicitly while `--andy-pilot` retains its 600-second
+cap. Each invocation launches only one run and self-terminates after upload;
+the full-run deadman limit is 105 minutes including setup. Inference metadata
+records `pilot: false`. No four-trial sweep is authorized.
+
+```sh
+AWS_PROFILE=mineclaude-sso bench/aws/launch.sh --andy-run \
+  --harness opencode --model selfhosted/andy-4.2 --type g6.2xlarge \
+  --seconds 3600 --git-ref feat/andy-4.2 --run-id andy-4.2-1h-20260929 --no-wait
+```
